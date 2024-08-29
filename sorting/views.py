@@ -10,19 +10,19 @@ class ExternalAPIDataView(APIView):
         # Fetch data from the external API
         try:
             response = requests.get('http://13.127.246.196:8000/api/registers')
-            response.raise_for_status()  # Raise an exception for bad status codes
+            response.raise_for_status()
             data = response.json()
         except requests.RequestException as e:
             return Response({"error": f"Failed to fetch data from external API: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         # Extract filtering and sorting options from request body
         filters = request.data.get('filters', {})
-        sort_by = request.data.get('sort_by')
+        sort_by = request.data.get('sort_by', 'time_end')  # Default to sorting by `time_end` if not provided
 
         # Manual filtering based on provided options
-        for param, param_value in filters.items():
-            if param_value:
-                data = [item for item in data if param_value.lower() in item.get(param, '').lower()]
+        college_name_filter = filters.get('college_name', '')
+        if college_name_filter:
+            data = [item for item in data if college_name_filter.lower() in item.get('college_name', '').lower()]
 
         # Apply sorting
         if sort_by:
